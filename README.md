@@ -1,45 +1,72 @@
-# Git Repository Merger into Monorepo
+# Git Repository Merger - Monorepo Tool
 
-This script helps merge multiple Git repositories into a single unified monorepo, preserving commit history, branches, and tags. It supports custom branch and tag naming patterns to avoid conflicts.
+This script automates the process of merging multiple Git repositories into a single **monorepo**, preserving commit history and tags for each repository. It clones each repository locally, prepares its structure by moving all contents into a subdirectory, and merges it into the monorepo repository.
+
+---
 
 ## Features
 
-- **Merge Multiple Repositories**: Combines repositories into a monorepo.
-- **Preserve Commit History**: Ensures full commit history is retained for all branches and tags.
-- **Branch Naming Pattern**: Uses structured patterns to avoid conflicts: 
-  `feature/<repo>/<branch>`, `hotfix/<repo>/<branch>`, etc.
-- **Tag Prefixing**: Tags are prefixed with `<repo>_` for uniqueness.
-- **Custom Configuration**: Accepts paths to the input CSV, monorepo directory, and remote URL.
+- **Preserves Commit History**: Retains the full commit history of each repository.
+- **Branch and Tag Synchronization**:
+  - Merges key branches (`main`, `master`, `DEV`) into corresponding branches in the monorepo.
+  - Additional branches are prefixed with their repository name.
+  - Tags are preserved and prefixed with the repository name.
+- **Repository Preparation**:
+  - Moves each repository's files into a subdirectory named after the repository.
+  - Excludes unnecessary files like `.gitattributes`, `.gitignore`, `.editorconfig` (optional).
+- **Conflict Resolution**:
+  - Automatically resolves merge conflicts using the `ours` strategy if necessary.
+- **Push to Remote**: Pushes all branches and tags to a specified remote monorepo.
 
-## Requirements
-
-- Git installed on your system.
-- A valid input CSV file listing repositories to merge.
+---
 
 ## Usage
 
-### Command-Line Options
-
 ```bash
-./merge_repos.sh -f <path/to/input.csv> -d <path/to/monorepo> -r <remote_git_url>
+./merge_repos.sh -f /path/to/input.csv -d /path/to/monorepo -r git@github.com:your-user/monorepo.git
 ```
 
-- `-f, --file <path>`: Path to the input CSV file (required).
-- `-d, --directory <path>`: Path where the monorepo will be created (required).
-- `-r, --remote <url>`: Remote Git URL for the monorepo (required).
-- `--help`: Display help documentation.
+### Options
 
-### Example
+- **`-f, --file`**: Path to the input CSV file listing repositories to be merged. (Required)
+- **`-d, --directory`**: Path where the monorepo repository will be created. (Required)
+- **`-r, --remote`**: Remote Git URL for the monorepo repository. (Required)
+- **`--help`**: Display help information.
 
-```bash
-./merge_repos.sh -f /home/user/repositories.csv -d /home/user/monorepo -r git@github.com:user/monorepo.git
-```
+---
+
+## Input CSV
+
+The **input CSV file** (`input.csv`) lists the repositories to be merged. A template file (`input.csv_template`) is provided to help you create your own `input.csv`.
 
 ### Input CSV Format
 
-The input CSV must have the following columns:
+The input CSV file should follow this format:
 
 ```csv
+# YOU MUST LEFT A CF/LF AT THE END OF FILE
+repo-name,git-url
+```
+
+### Example `input.csv`:
+
+```csv
+# YOU MUST LEFT A CF/LF AT THE END OF FILE
+repo-name,git-url
+pokemon-master-management,git@github.com:trustlreis/pokemon-master-management.git
+mtls-client-server-poc,git@github.com:trustlreis/mtls-client-server-poc.git
+```
+
+#### Notes:
+- **Blank Lines**: Ensure a blank line (CF/LF) is present at the end of the file.
+- **Comments**: Lines starting with `#` are treated as comments and ignored.
+
+### Example `input.csv_template`:
+
+A template file (`input.csv_template`) is included in the repository:
+
+```csv
+# YOU MUST LEFT A CF/LF AT THE END OF FILE
 repo-name,git-url
 repo1,https://github.com/user/repo1.git
 repo2,https://github.com/user/repo2.git
@@ -47,98 +74,110 @@ repo2,https://github.com/user/repo2.git
 repo3,https://github.com/user/repo3.git
 ```
 
-- **`repo-name`**: A short, descriptive name for the repository.
-- **`git-url`**: The repository’s Git URL.
+To use this template:
 
-### Output Structure
-
-After merging, the monorepo will look like this:
-
-```
-monorepo/
-├── repo1/
-│   ├── files-from-repo1
-├── repo2/
-│   ├── files-from-repo2
-├── .git/ (unified repository metadata)
-```
-
-Branches will be structured as:
-```
-feature/repo1/main
-hotfix/repo2/fix-bug
-uncategorized/repo3/legacy-branch
-```
-
-Tags will be structured as:
-```
-repo1_v1.0
-repo2_patch-1
-```
-
-### Steps
-
-1. **Prepare Input CSV**:
-   Create an input CSV file listing repositories to be merged.
-
-2. **Run the Script**:
-   Use the `merge_repos.sh` script with the desired options:
+1. Copy `input.csv_template` to a new file:
    ```bash
-   ./merge_repos.sh -f /path/to/repositories.csv -d /path/to/monorepo -r git@github.com:user/monorepo.git
+   cp input.csv_template input.csv
    ```
 
-3. **Verify the Monorepo**:
-   - Check the structure of the monorepo directory.
-   - Use `git log`, `git branch`, and `git tag` to confirm that commit history, branches, and tags are preserved.
+2. Edit `input.csv` to list your repositories.
+
+---
+
+## How It Works
+
+1. **Clone Repositories**:
+   - Each repository is cloned into a temporary directory.
+
+2. **Prepare Files**:
+   - All files are moved into a subdirectory named after the repository.
+   - Hidden files (e.g., `.gitignore`) are included.
+   - Optional cleanup of unnecessary files like `.gitattributes`.
+
+3. **Merge Into Monorepo**:
+   - Key branches (`main`, `master`, `DEV`) are merged into the corresponding branches in the monorepo.
+   - Other branches are prefixed with the repository name and merged into the monorepo.
 
 4. **Push to Remote**:
-   The script will automatically push the monorepo to the specified remote Git URL.
+   - Pushes all branches and tags to the specified monorepo remote URL.
 
-## Notes
+---
 
-- The script categorizes branches based on their prefixes (`feature/`, `hotfix/`, `bugfix/`). If no prefix is detected, branches are categorized under `uncategorized/`.
-- Remotes for the original repositories are retained in the monorepo for debugging or later use. You can list them with:
-  ```bash
-  git remote -v
-  ```
-- **Preservation of Commit History**: The script ensures all commits, branches, and tags are intact in the monorepo.
+## Commit History Notes
 
-## Troubleshooting
+- **All commits appear merged in the monorepo commit history**:
+  - The commit history of each repository is fully preserved after merging into the monorepo.
 
-1. **Error: Input CSV Not Found**:
-   - Ensure the input file exists at the specified path.
+- **How commit history appears in tools**:
+  - **In GitHub**:
+    - When viewing a specific file, the most recent commit will show the monorepo preparation (e.g., the commit that moved the file into its subdirectory).
+    - To view the full commit history for the file, click **"History"** or **"Browse History"** in the GitHub interface.
+    - **Note**: The GitHub web interface does not consolidate the commit timeline. Instead, you'll see the preparation commit first, with legacy repository commits visible after browsing the file's history.
+  - **In IDEs (IntelliJ, PyCharm, Eclipse, VS Code)**:
+    - The commit history is consolidated as a single timeline, showing all commits for the artifact from both the monorepo and the original repository.
+    - You can see the full historical context without needing to "browse" separately.
 
-2. **Error: Failed to Fetch Repository**:
-   - Verify that the Git URLs in the input CSV are correct and accessible.
-
-3. **Branches Not Merging**:
-   - Check for unrelated histories and ensure the `--allow-unrelated-histories` flag is used.
-
-4. **Missing Commits**:
-   - Use `git log` to verify commit history. Ensure that all branches were fetched and merged.
+---
 
 ## Example Workflow
 
-```bash
-# Step 1: Prepare CSV
-echo "repo-name,git-url" > repositories.csv
-echo "repo1,https://github.com/user/repo1.git" >> repositories.csv
-echo "repo2,https://github.com/user/repo2.git" >> repositories.csv
+### Input CSV
 
-# Step 2: Run the Script
-./merge_repos.sh -f repositories.csv -d /home/user/monorepo -r git@github.com:user/monorepo.git
-
-# Step 3: Verify Output
-cd /home/user/monorepo
-git log --graph --oneline
-git branch -a
-git tag
+```csv
+# YOU MUST LEFT A CF/LF AT THE END OF FILE
+repo-name,git-url
+pokemon-master-management,git@github.com:trustlreis/pokemon-master-management.git
+mtls-client-server-poc,git@github.com:trustlreis/mtls-client-server-poc.git
 ```
 
-## Contributing
+### Command
 
-Feel free to contribute improvements to this repository via pull requests.
+```bash
+./merge_repos.sh -f /path/to/repositories.csv -d /path/to/monorepo -r git@github.com:your-user/monorepo.git
+```
 
-## License
+### Result
 
-This project is licensed under the MIT License. See the `LICENSE` file for details.
+The script creates a monorepo with the following structure:
+
+```plaintext
+monorepo/
+├── pokemon-master-management/
+│   ├── src/
+│   │   ├── file1.js
+│   │   ├── file2.js
+│   ├── .gitignore
+│   └── README.md
+├── mtls-client-server-poc/
+│   ├── client/
+│   ├── server/
+│   ├── .gitignore
+│   └── README.md
+└── .git/
+```
+
+---
+
+## Conflict Resolution
+
+- The script automatically resolves merge conflicts during branch merging by applying the **`ours` strategy**, which prioritizes the monorepo's content over conflicting changes from individual repositories.
+
+---
+
+## Notes
+
+- **Hidden Files**: The script ensures all hidden files (e.g., `.gitignore`, `.env`) are moved into the respective subdirectories.
+- **Temporary Directories**: Temporary directories created for cloning repositories are deleted after merging.
+- **Error Handling**: If any step fails (e.g., cloning, merging), the script will display an error message and terminate.
+- **Commit History**:
+  - All commits appear merged in the repository commit history.
+  - **GitHub Web Interface**: Shows the preparation commit first but allows browsing legacy commits.
+  - **IDEs**: Show a consolidated timeline.
+
+---
+
+## Requirements
+
+- **Git**: Ensure Git is installed and available in the system's `PATH`.
+- **Bash**: The script is designed to run in a Bash shell.
