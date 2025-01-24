@@ -1,4 +1,4 @@
-# YOU MUST LEFT A CF/LF AT THE END OF FILE
+# YOU MUST LEFT A CR/LF AT THE END OF FILE
 repo-name,git-url
 repo1,https://github.com/user/repo1.git
 repo2,https://github.com/user/repo2.git

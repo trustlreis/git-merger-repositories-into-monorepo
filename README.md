@@ -44,21 +44,21 @@ The **input CSV file** (`input.csv`) lists the repositories to be merged. A temp
 The input CSV file should follow this format:
 
 ```csv
-# YOU MUST LEFT A CF/LF AT THE END OF FILE
+# YOU MUST LEFT A CR/LF AT THE END OF FILE
 repo-name,git-url
 ```
 
 ### Example `input.csv`:
 
 ```csv
-# YOU MUST LEFT A CF/LF AT THE END OF FILE
+# YOU MUST LEFT A CR/LF AT THE END OF FILE
 repo-name,git-url
 pokemon-master-management,git@github.com:trustlreis/pokemon-master-management.git
 mtls-client-server-poc,git@github.com:trustlreis/mtls-client-server-poc.git
 ```
 
 #### Notes:
-- **Blank Lines**: Ensure a blank line (CF/LF) is present at the end of the file.
+- **Blank Lines**: Ensure a blank line (CR/LF) is present at the end of the file.
 - **Comments**: Lines starting with `#` are treated as comments and ignored.
 
 ### Example `input.csv_template`:
@@ -66,7 +66,7 @@ mtls-client-server-poc,git@github.com:trustlreis/mtls-client-server-poc.git
 A template file (`input.csv_template`) is included in the repository:
 
 ```csv
-# YOU MUST LEFT A CF/LF AT THE END OF FILE
+# YOU MUST LEFT A CR/LF AT THE END OF FILE
 repo-name,git-url
 repo1,https://github.com/user/repo1.git
 repo2,https://github.com/user/repo2.git
@@ -125,7 +125,7 @@ To use this template:
 ### Input CSV
 
 ```csv
-# YOU MUST LEFT A CF/LF AT THE END OF FILE
+# YOU MUST LEFT A CR/LF AT THE END OF FILE
 repo-name,git-url
 pokemon-master-management,git@github.com:trustlreis/pokemon-master-management.git
 mtls-client-server-poc,git@github.com:trustlreis/mtls-client-server-poc.git
