@@ -19,13 +19,16 @@ This script automates the process of merging multiple Git repositories into a si
 - **Push to Remote**: Pushes all branches and tags to a specified remote monorepo.
 - **Dynamic README Generation**:
   - Automatically creates a `README.md` in the monorepo root, listing all imported repositories with clickable links.
+- **Temporary Directory Cleanup**:
+  - Temporary directories are deleted by default after merging.
+  - Optionally, they can be kept for debugging or inspection.
 
 ---
 
 ## Usage
 
 ```bash
-./merge_repos.sh -f /path/to/input.csv -d /path/to/monorepo -r git@github.com:your-user/monorepo.git
+./merge_repos.sh -f /path/to/input.csv -d /path/to/monorepo -r git@github.com:your-user/monorepo.git [--keep-temp]
 ```
 
 ### Options
@@ -33,6 +36,7 @@ This script automates the process of merging multiple Git repositories into a si
 - **`-f, --file`**: Path to the input CSV file listing repositories to be merged. (Required)
 - **`-d, --directory`**: Path where the monorepo repository will be created. (Required)
 - **`-r, --remote`**: Remote Git URL for the monorepo repository. (Required)
+- **`--keep-temp`**: Keeps the temporary directories used for cloning repositories. By default, these directories are deleted after merging.
 - **`--help`**: Display help information.
 
 ---
@@ -142,6 +146,19 @@ All repositories have been successfully merged into this monorepo.
 
 ---
 
+## Temporary Directory Handling
+
+### Default Behavior:
+- Temporary directories created for cloning repositories are **deleted** after they have been merged into the monorepo.
+
+### `--keep-temp` Option:
+- Use this option to **retain** the temporary directories for debugging or inspection:
+  ```bash
+  ./merge_repos.sh -f /path/to/input.csv -d /path/to/monorepo -r git@github.com:your-user/monorepo.git --keep-temp
+  ```
+
+---
+
 ## Example Workflow
 
 ### Input CSV
@@ -184,7 +201,8 @@ monorepo/
 
 ## Notes
 
-- **Temporary Directories**: Temporary directories are deleted after merging by default.
+- **Hidden Files**: The script ensures all hidden files (e.g., `.gitignore`, `.env`) are moved into the respective subdirectories.
+- **Temporary Directories**: Temporary directories are deleted by default but can be retained with the `--keep-temp` option.
 - **Error Handling**: If any step fails (e.g., cloning, merging), the script will display an error message and terminate.
 - **Commit History**:
   - All commits appear merged in the repository commit history.
