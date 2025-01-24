@@ -7,15 +7,18 @@
 #   This script merges multiple Git repositories into a unified monorepo.
 #   It clones each repository, prepares its structure, and merges it into the
 #   monorepo repository. Additionally, it creates a README.md in the monorepo
-#   root listing all imported repositories.
+#   root listing all imported repositories. By default, temporary directories 
+# are deleted after use.
 #
 # Usage:
-#   ./merge_repos.sh -f /path/to/input.csv -d /path/to/monorepo -r git@github.com:your-user/monorepo.git
+#   ./merge_repos.sh -f /path/to/input.csv -d /path/to/monorepo -r git@github.com:your-user/monorepo.git [--keep-temp]
 #
 # Options:
 #   -f, --file <path>      Path to the input CSV file (required).
 #   -d, --directory <path> Path to create the monorepo (required).
 #   -r, --remote <url>     Remote Git URL for the monorepo (required).
+#   --keep-temp            Keep temporary directories after merging (optional).
+#   --help                 Display help information.
 #
 # Input CSV Format:
 #   The CSV file must contain the following columns:
@@ -34,11 +37,13 @@ function error_exit {
 }
 
 # Parse Arguments
+KEEP_TEMP=false
 while [[ "$#" -gt 0 ]]; do
   case $1 in
     -f|--file) INPUT_CSV="$2"; shift ;;
     -d|--directory) MONOREPO_DIR="$2"; shift ;;
     -r|--remote) REMOTE_URL="$2"; shift ;;
+    --keep-temp) KEEP_TEMP=true ;;
     --help) print_help ;;
     *) error_exit "Unknown parameter passed: $1" ;;
   esac
@@ -77,6 +82,7 @@ echo "# Monorepo" > "$README_FILE"
 echo -e "\nThis monorepo contains the following imported repositories:\n" >> "$README_FILE"
 
 # Clone and Prepare Each Repository
+TEMP_DIRECTORIES=()
 while IFS=, read -r REPO_NAME GIT_URL; do
   # Skip header row and comments
   if [[ "$REPO_NAME" == "repo-name" && "$GIT_URL" == "git-url" ]] || [[ "$REPO_NAME" =~ ^# ]]; then
@@ -88,6 +94,7 @@ while IFS=, read -r REPO_NAME GIT_URL; do
   # Clone Repository
   CLONE_DIR="${MONOREPO_DIR}_temp_${REPO_NAME}"
   git clone "$GIT_URL" "$CLONE_DIR" || error_exit "Failed to clone $GIT_URL."
+  TEMP_DIRECTORIES+=("$CLONE_DIR") # Track temporary directories
 
   pushd "$CLONE_DIR" > /dev/null || error_exit "Failed to navigate to cloned directory: $CLONE_DIR."
 
@@ -134,10 +141,17 @@ while IFS=, read -r REPO_NAME GIT_URL; do
   echo "- [$REPO_NAME](./$REPO_NAME)" >> "$README_FILE"
 done < "$INPUT_CSV"
 
-# Finalize README.md
-echo -e "\nAll repositories have been successfully merged into this monorepo." >> "$README_FILE"
+# Delete Temporary Directories (if not keeping them)
+if [ "$KEEP_TEMP" = false ]; then
+  echo "Cleaning up temporary directories..."
+  for DIR in "${TEMP_DIRECTORIES[@]}"; do
+    rm -rf "$DIR" || echo "Failed to delete temporary directory: $DIR"
+  done
+else
+  echo "Temporary directories are being kept (--keep-temp)."
+fi
 
-# Commit README.md to Monorepo
+# Push Changes to Remote
 pushd "$MONOREPO_DIR" > /dev/null || error_exit "Failed to navigate to monorepo directory."
 git add README.md || error_exit "Failed to add README.md to staging."
 git commit -m "Add README.md with list of imported repositories" || error_exit "Failed to commit README.md."
