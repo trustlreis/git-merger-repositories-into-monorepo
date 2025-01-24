@@ -1,6 +1,6 @@
 # Git Repository Merger - Monorepo Tool
 
-This script automates the process of merging multiple Git repositories into a single **monorepo**, preserving commit history and tags for each repository. It clones each repository locally, prepares its structure by moving all contents into a subdirectory, and merges it into the monorepo repository.
+This script automates the process of merging multiple Git repositories into a single **monorepo**, preserving commit history and tags for each repository. It clones each repository locally, prepares its structure by moving all contents into a subdirectory, and merges it into the monorepo repository. Additionally, it creates a `README.md` in the monorepo root, listing all imported repositories with links to their respective directories.
 
 ---
 
@@ -17,6 +17,8 @@ This script automates the process of merging multiple Git repositories into a si
 - **Conflict Resolution**:
   - Automatically resolves merge conflicts using the `ours` strategy if necessary.
 - **Push to Remote**: Pushes all branches and tags to a specified remote monorepo.
+- **Dynamic README Generation**:
+  - Automatically creates a `README.md` in the monorepo root, listing all imported repositories with clickable links.
 
 ---
 
@@ -44,14 +46,14 @@ The **input CSV file** (`input.csv`) lists the repositories to be merged. A temp
 The input CSV file should follow this format:
 
 ```csv
-# YOU MUST LEFT A CR/LF AT THE END OF FILE
+# YOU MUST LEAVE A CR/LF AT THE END OF FILE
 repo-name,git-url
 ```
 
 ### Example `input.csv`:
 
 ```csv
-# YOU MUST LEFT A CR/LF AT THE END OF FILE
+# YOU MUST LEAVE A CR/LF AT THE END OF FILE
 repo-name,git-url
 pokemon-master-management,git@github.com:trustlreis/pokemon-master-management.git
 mtls-client-server-poc,git@github.com:trustlreis/mtls-client-server-poc.git
@@ -66,7 +68,7 @@ mtls-client-server-poc,git@github.com:trustlreis/mtls-client-server-poc.git
 A template file (`input.csv_template`) is included in the repository:
 
 ```csv
-# YOU MUST LEFT A CR/LF AT THE END OF FILE
+# YOU MUST LEAVE A CR/LF AT THE END OF FILE
 repo-name,git-url
 repo1,https://github.com/user/repo1.git
 repo2,https://github.com/user/repo2.git
@@ -102,6 +104,26 @@ To use this template:
 4. **Push to Remote**:
    - Pushes all branches and tags to the specified monorepo remote URL.
 
+5. **Generate README.md**:
+   - A `README.md` file is automatically created in the monorepo root, listing all imported repositories with links to their directories.
+
+---
+
+## Generated `README.md`
+
+After running the script, the following `README.md` is created in the monorepo root:
+
+```markdown
+# Monorepo
+
+This monorepo contains the following imported repositories:
+
+- [pokemon-master-management](./pokemon-master-management)
+- [mtls-client-server-poc](./mtls-client-server-poc)
+
+All repositories have been successfully merged into this monorepo.
+```
+
 ---
 
 ## Commit History Notes
@@ -125,7 +147,7 @@ To use this template:
 ### Input CSV
 
 ```csv
-# YOU MUST LEFT A CR/LF AT THE END OF FILE
+# YOU MUST LEAVE A CR/LF AT THE END OF FILE
 repo-name,git-url
 pokemon-master-management,git@github.com:trustlreis/pokemon-master-management.git
 mtls-client-server-poc,git@github.com:trustlreis/mtls-client-server-poc.git
@@ -154,21 +176,15 @@ monorepo/
 │   ├── server/
 │   ├── .gitignore
 │   └── README.md
+├── README.md
 └── .git/
 ```
 
 ---
 
-## Conflict Resolution
-
-- The script automatically resolves merge conflicts during branch merging by applying the **`ours` strategy**, which prioritizes the monorepo's content over conflicting changes from individual repositories.
-
----
-
 ## Notes
 
-- **Hidden Files**: The script ensures all hidden files (e.g., `.gitignore`, `.env`) are moved into the respective subdirectories.
-- **Temporary Directories**: Temporary directories created for cloning repositories are deleted after merging.
+- **Temporary Directories**: Temporary directories are deleted after merging by default.
 - **Error Handling**: If any step fails (e.g., cloning, merging), the script will display an error message and terminate.
 - **Commit History**:
   - All commits appear merged in the repository commit history.

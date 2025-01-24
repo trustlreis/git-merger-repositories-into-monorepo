@@ -6,7 +6,8 @@
 # Description:
 #   This script merges multiple Git repositories into a unified monorepo.
 #   It clones each repository, prepares its structure, and merges it into the
-#   monorepo repository.
+#   monorepo repository. Additionally, it creates a README.md in the monorepo
+#   root listing all imported repositories.
 #
 # Usage:
 #   ./merge_repos.sh -f /path/to/input.csv -d /path/to/monorepo -r git@github.com:your-user/monorepo.git
@@ -70,6 +71,11 @@ fi
 
 popd > /dev/null
 
+# Create README.md in Monorepo Root
+README_FILE="$MONOREPO_DIR/README.md"
+echo "# Monorepo" > "$README_FILE"
+echo -e "\nThis monorepo contains the following imported repositories:\n" >> "$README_FILE"
+
 # Clone and Prepare Each Repository
 while IFS=, read -r REPO_NAME GIT_URL; do
   # Skip header row and comments
@@ -123,10 +129,20 @@ while IFS=, read -r REPO_NAME GIT_URL; do
 
   # Cleanup Temporary Directory
   rm -rf "$CLONE_DIR"
+
+  # Add Entry to README.md
+  echo "- [$REPO_NAME](./$REPO_NAME)" >> "$README_FILE"
 done < "$INPUT_CSV"
 
-# Push Changes to Remote
+# Finalize README.md
+echo -e "\nAll repositories have been successfully merged into this monorepo." >> "$README_FILE"
+
+# Commit README.md to Monorepo
 pushd "$MONOREPO_DIR" > /dev/null || error_exit "Failed to navigate to monorepo directory."
+git add README.md || error_exit "Failed to add README.md to staging."
+git commit -m "Add README.md with list of imported repositories" || error_exit "Failed to commit README.md."
+
+# Push Changes to Remote
 git remote add origin "$REMOTE_URL"
 git push origin --all || error_exit "Failed to push all branches to remote: $REMOTE_URL."
 git push origin --tags || error_exit "Failed to push all tags to remote: $REMOTE_URL."
